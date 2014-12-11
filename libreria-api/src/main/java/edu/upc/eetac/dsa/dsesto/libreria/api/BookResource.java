@@ -42,11 +42,12 @@ public class BookResource {
 	private String GET_BOOKS_QUERY = "select * from books where bookid > ifnull(?, 1) order by bookid asc limit ?";
 	private String GET_BOOKS_QUERY_FROM_LAST = "select * from books where bookid < ifnull(?, 10) order by bookid desc limit ?";
 	private String GET_BOOK_BY_TITLE = "select * from books where title = ?";
+	private String GET_BOOK_BY_ID = "select * from books where bookid = ?";
 	private String GET_BOOKS_BY_TITLE = "select * from books where title like ? and bookid > ifnull(?, 1) order by bookid asc limit ?";
 	private String GET_BOOKS_BY_TITLE_FROM_LAST = "select * from books where title like ? and bookid < ifnull(?, 10) order by bookid desc limit ?";
 	private String GET_BOOKS_BY_AUTHOR = "select * from books where author like ? and bookid > ifnull(?, 1) order by bookid asc limit ?";
 	private String GET_BOOKS_BY_AUTHOR_FROM_LAST = "select * from books where author like ? and bookid < ifnull(?, 10) order by bookid desc limit ?";
-	private String INSERT_BOOK_QUERY = "insert into books values(?, ?, ?, ?, ?, ?, ?)";
+	private String INSERT_BOOK_QUERY = "insert into books (title,author,language,edition,editionDate,printingDate,publisher) value (?, ?, ?, ?, ?, ?, ?)";
 	private String UPDATE_BOOK_QUERY = "update books set title=ifnull(?, title), author=ifnull(?, author), language=ifnull(?, language), edition=ifnull(?, edition), editionDate=ifnull(?, editionDate), printingDate=ifnull(?, printingDate), publisher=ifnull(?, publisher) where title=?";
 	private String DELETE_TITLE_QUERY = "delete from books where title=?";
 
@@ -188,24 +189,23 @@ public class BookResource {
 	 * return book; }
 	 */
 
+	
+	
 	// Obtener libro (por título) - cacheable
 	@GET
 	@Path("/{title}")
 	@Produces(MediaType.LIBRERIA_API_BOOK)
 	public Response getBook(@PathParam("title") String title,
-			@Context Request request) {
+@Context Request request) {
 		// Como se devuelve un Response, construimos nosotros la respueta
 		CacheControl cc = new CacheControl();
 
-		Book book = getBookFromDatabase(title);
+		Book book = getBookFromDatabasetitle(title);
 
 		// Calcular el ETag del recurso
 		// Como en este caso no hay un last_modified que pueda variar, se hace
 		// un hash md5 con los parámetros que se pueden modificar:
-		String eTagDigest = DigestUtils.md5Hex(book.getTitle()
-				+ book.getAuthor() + book.getEdition() + book.getEditonDate()
-				+ book.getLanguage() + book.getPrintingDate()
-				+ book.getPublisher());
+		String eTagDigest = DigestUtils.md5Hex(book.getTitle()+ book.getAuthor() + book.getEdition() + book.getEditonDate()+ book.getLanguage() + book.getPrintingDate()+ book.getPublisher());
 
 		EntityTag eTag = new EntityTag(eTagDigest);
 
@@ -221,11 +221,16 @@ public class BookResource {
 		return rb.build();
 	}
 
+	
+	
+	
+	
 	// Crear ficha de libro
 	@POST
 	@Consumes(MediaType.LIBRERIA_API_BOOK)
 	@Produces(MediaType.LIBRERIA_API_BOOK)
-	public Book createBook(Book book) {
+	public Book createBook(Book book) 
+	{
 		book.setEditonDate("1/13"); // Viene como "null" desde Postman, no sé
 									// por qué
 		validateBook(book);
@@ -240,8 +245,7 @@ public class BookResource {
 
 		PreparedStatement stmt = null;
 		try {
-			stmt = conn.prepareStatement(INSERT_BOOK_QUERY,
-					Statement.RETURN_GENERATED_KEYS);
+			stmt = conn.prepareStatement(INSERT_BOOK_QUERY,Statement.RETURN_GENERATED_KEYS);
 			stmt.setString(1, book.getTitle());
 			stmt.setString(2, book.getAuthor());
 			stmt.setString(3, book.getLanguage());
@@ -252,10 +256,11 @@ public class BookResource {
 			stmt.executeUpdate();
 
 			ResultSet rs = stmt.getGeneratedKeys();
-			if (rs.next()) {
-				String title = rs.getString(1);
+			if (rs.next()) 
+			{
+				String bookid = rs.getString(1);
 
-				book = getBookFromDatabase(title);
+				book = getBookFromDatabase(bookid);
 			}
 		} catch (SQLException e) {
 			throw new ServerErrorException(e.getMessage(),
@@ -272,6 +277,10 @@ public class BookResource {
 		return book;
 	}
 
+	
+	
+	
+	
 	// Modificar ficha de libro
 	@PUT
 	@Path("/{title}")
@@ -418,9 +427,10 @@ public class BookResource {
 			}
 		}
 	}
-
-	// Método para recuperar libro de la BD
-	private Book getBookFromDatabase(String title) {
+	
+	
+	private Book getBookFromDatabasetitle(String title) 
+	{
 		Book book = new Book();
 
 		Connection conn = null;
@@ -445,8 +455,68 @@ public class BookResource {
 				book.setPublisher(rs.getString("publisher"));
 				book.setTitle(rs.getString("title"));
 			} else {
-				throw new NotFoundException("There's no book with title="
-						+ title);
+				throw new NotFoundException("There's no book with title="+ title);
+			}
+		} catch (SQLException e) {
+			throw new ServerErrorException(e.getMessage(),
+					Response.Status.INTERNAL_SERVER_ERROR);
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+			}
+		}
+		return book;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	// Método para recuperar libro de la BD
+	private Book getBookFromDatabase(String bookid) 
+	{
+		Book book = new Book();
+
+		Connection conn = null;
+		try {
+			conn = ds.getConnection();
+		} catch (SQLException e) {
+			throw new ServerErrorException("Could not connect to the database",
+					Response.Status.SERVICE_UNAVAILABLE);
+		}
+
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(GET_BOOK_BY_ID);
+			stmt.setString(1, bookid);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				book.setAuthor(rs.getString("author"));
+				book.setEdition(rs.getString("edition"));
+				book.setEditonDate(rs.getString("editionDate"));
+				book.setLanguage(rs.getString("language"));
+				book.setPrintingDate(rs.getString("printingDate"));
+				book.setPublisher(rs.getString("publisher"));
+				book.setTitle(rs.getString("title"));
+			} else {
+				throw new NotFoundException("There's no book with title="+ bookid);
 			}
 		} catch (SQLException e) {
 			throw new ServerErrorException(e.getMessage(),

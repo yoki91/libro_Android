@@ -11,7 +11,8 @@ import java.util.ArrayList;
 
 import edu.upc.eetac.dsa.dsesto.libreria.api.Book;
 
-public class BookAdapter extends BaseAdapter {
+public class BookAdapter extends BaseAdapter
+{
     private final ArrayList<Book> data;
     private LayoutInflater inflater;
 

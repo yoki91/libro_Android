@@ -36,7 +36,8 @@ public class LibreriaMainActivity_copy extends ListActivity {
         }
 
         @Override
-        protected void onPostExecute(BookCollection result) {
+        protected void onPostExecute(BookCollection result)
+        {
             addBooks(result);
             if (pd != null) {
                 pd.dismiss();
@@ -44,7 +45,8 @@ public class LibreriaMainActivity_copy extends ListActivity {
         }
 
         @Override
-        protected void onPreExecute() {
+        protected void onPreExecute()
+        {
             pd = new ProgressDialog(LibreriaMainActivity_copy.this);
             pd.setTitle("Searching...");
             pd.setCancelable(false);
@@ -65,7 +67,8 @@ public class LibreriaMainActivity_copy extends ListActivity {
     private BookAdapter adapter;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_libreria_main);
 
@@ -75,24 +78,27 @@ public class LibreriaMainActivity_copy extends ListActivity {
 
         Authenticator.setDefault(new Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("test", "test"
-                        .toCharArray());
+                return new PasswordAuthentication("test", "test".toCharArray());
             }
         });
         (new FetchBooksTask()).execute();
     }
 
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
+    protected void onListItemClick(ListView l, View v, int position, long id)
+    {
         Book book = booksList.get(position);
         Log.d(TAG, book.getLinks().get("self").getTarget());
+
+        Log.d("mostrar Link","el Link es:"+book.getLinks().get("self").getTarget());
 
         Intent intent = new Intent(this, BookDetailActivity.class);
         intent.putExtra("url", book.getLinks().get("self").getTarget());
         startActivity(intent);
     }
 
-    private void addBooks(BookCollection books){
+    private void addBooks(BookCollection books)
+    {
         booksList.addAll(books.getBooks());
         adapter.notifyDataSetChanged();
     }

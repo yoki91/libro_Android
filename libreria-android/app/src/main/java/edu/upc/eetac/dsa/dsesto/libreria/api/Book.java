@@ -3,7 +3,8 @@ package edu.upc.eetac.dsa.dsesto.libreria.api;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Book {
+public class Book
+{
     private String title;
     private String author;
     private String language;

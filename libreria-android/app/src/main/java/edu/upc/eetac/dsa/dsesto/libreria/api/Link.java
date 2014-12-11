@@ -3,7 +3,8 @@ package edu.upc.eetac.dsa.dsesto.libreria.api;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Link {
+public class Link
+{
 
     private String target;
     private Map<String, String> parameters;

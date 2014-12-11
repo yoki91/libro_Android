@@ -2,12 +2,10 @@ package edu.upc.eetac.dsa.dsesto.libreria.api;
 
 import javax.sql.DataSource;
 import javax.ws.rs.Path;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
@@ -26,12 +24,11 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-
 import com.mysql.jdbc.Statement;
-
 import edu.upc.eetac.dsa.dsesto.libreria.api.model.Author;
 import edu.upc.eetac.dsa.dsesto.libreria.api.model.Book;
 import edu.upc.eetac.dsa.dsesto.libreria.api.model.Review;
+import edu.upc.eetac.dsa.dsesto.libreria.api.model.ReviewCollection;
 
 @Path("/reviews")
 public class ReviewResource {
@@ -42,12 +39,84 @@ public class ReviewResource {
 	private String DELETE_REVIEW = "delete from reviews where reviewid=?";
 	private String UPDATE_REVIEW = "update reviews set content=ifnull(?, content) where reviewid=?";
 	private String GET_REVIEW_BY_USER = "select * from reviews where username = ? and book = ?";
-
+	private String GET_REVIEWS_BY_BOOK = "select*from reviews, books where reviews.book=books.bookid and books.title=?";
+	
+	@GET
+	@Produces(MediaType.LIBRERIA_API_REVIEW_COLLECTION)
+	public ReviewCollection getReviews(@QueryParam("title") String title) 
+	{
+		ReviewCollection reviews = new ReviewCollection();
+		Connection conn = null;
+		try 
+		{
+			conn = ds.getConnection();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(GET_REVIEWS_BY_BOOK);
+			stmt.setString(1, title);
+			ResultSet rs = stmt.executeQuery();
+			int lastReview = 0;
+			boolean first = true;
+			while (rs.next()) 
+			{
+				Review review = new Review();
+				review.setBook(rs.getInt("book"));
+				review.setContent(rs.getString("content"));
+				review.setName(rs.getString("name"));
+				review.setUsername(rs.getString("username"));
+				review.setReviewid(rs.getInt("reviewid"));
+				lastReview = rs.getInt("reviewid");
+				if (first) 
+				{
+					first = false;
+					reviews.setFirstReview(lastReview);
+				}
+				reviews.addReview(review);
+			}
+			reviews.setLastReview(lastReview);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+			}
+		}
+		return reviews;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	// Crear review
 	@POST
 	@Consumes(MediaType.LIBRERIA_API_REVIEW)
 	@Produces(MediaType.LIBRERIA_API_REVIEW)
-	public Review createReview(Review review) {
+	public Review createReview(Review review) 
+	{
 		validateNoPreviousReview(review);
 		
 		Connection conn = null;

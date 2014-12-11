@@ -1,0 +1,9 @@
+source booksdb-schema.sql;
+
+
+insert into users values('test', MD5('test'), 'Alicia Pérez', 'alicia@acme.com');
+insert into user_roles values ('test', 'registered');
+
+insert into users values('admin', MD5('admin'), 'Edith Galmes', 'edith@acme.com');
+insert into user_roles values ('admin', 'admin');
+

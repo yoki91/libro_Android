@@ -18,14 +18,16 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-public class LibreriaAPI {
+public class LibreriaAPI
+{
     private final static String TAG = LibreriaAPI.class.getName();
     private static LibreriaAPI instance = null;
     private URL url;
 
     private LibreriaRootAPI rootAPI = null;
 
-    private LibreriaAPI(Context context) throws IOException, AppException {
+    private LibreriaAPI(Context context) throws IOException, AppException
+    {
         super();
 
         AssetManager assetManager = context.getAssets();
@@ -38,7 +40,8 @@ public class LibreriaAPI {
         getRootAPI();
     }
 
-    public final static LibreriaAPI getInstance(Context context) throws AppException {
+    public final static LibreriaAPI getInstance(Context context) throws AppException
+    {
         if (instance == null)
             try {
                 instance = new LibreriaAPI(context);
@@ -49,7 +52,8 @@ public class LibreriaAPI {
         return instance;
     }
 
-    private void getRootAPI() throws AppException {
+    private void getRootAPI() throws AppException
+    {
         Log.d(TAG, "getRootAPI()");
         rootAPI = new LibreriaRootAPI();
         HttpURLConnection urlConnection = null;
@@ -59,8 +63,7 @@ public class LibreriaAPI {
             urlConnection.setDoInput(true);
             urlConnection.connect();
         } catch (IOException e) {
-            throw new AppException(
-                    "Can't connect to Libreria API Web Service");
+            throw new AppException("Can't connect to Libreria API Web Service");
         }
 
         BufferedReader reader;
@@ -76,35 +79,36 @@ public class LibreriaAPI {
             JSONObject jsonObject = new JSONObject(sb.toString());
             JSONArray jsonLinks = jsonObject.getJSONArray("links");
             parseLinks(jsonLinks, rootAPI.getLinks());
-        } catch (IOException e) {
-            throw new AppException(
-                    "Can't get response from Libreria API Web Service");
-        } catch (JSONException e) {
+
+        } catch (IOException e)
+        {
+            throw new AppException("Can't get response from Libreria API Web Service");
+        } catch (JSONException e)
+        {
             throw new AppException("Error parsing Libreria Root API");
         }
 
     }
 
-    public BookCollection getBooks() throws AppException {
+    public BookCollection getBooks() throws AppException
+    {
         Log.d(TAG, "getBooks()");
         BookCollection books = new BookCollection();
 
         HttpURLConnection urlConnection = null;
         try {
-            urlConnection = (HttpURLConnection) new URL(rootAPI.getLinks()
-                    .get("books").getTarget()).openConnection();
+            urlConnection = (HttpURLConnection) new URL(rootAPI.getLinks().get("books").getTarget()).openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.setDoInput(true);
             urlConnection.connect();
-        } catch (IOException e) {
-            throw new AppException(
-                    "Can't connect to Libreria API Web Service");
+        } catch (IOException e)
+        {
+            throw new AppException("Can't connect to Libreria API Web Service");
         }
 
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new InputStreamReader(
-                    urlConnection.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
             StringBuilder sb = new StringBuilder();
             String line = null;
             while ((line = reader.readLine()) != null) {
@@ -162,12 +166,18 @@ public class LibreriaAPI {
 
     private Map<String, Book> booksCache = new HashMap<String, Book>();
 
-    public Book getBook(String urlSting) throws AppException {
+    public Book getBook(String urlSting) throws AppException
+    {
         Book book = null;
         HttpURLConnection urlConnection = null;
         try {
+
+
             URL url = new URL(urlSting);
+
+            Log.d("urlSting","El urlSting es:"+url);
             urlConnection = (HttpURLConnection) url.openConnection();
+            Log.d("URL de get book","El URL es"+urlConnection);
             urlConnection.setRequestMethod("GET");
             urlConnection.setDoInput(true);
 
@@ -226,8 +236,7 @@ public class LibreriaAPI {
 
         HttpURLConnection urlConnection = null;
         try {
-            urlConnection = (HttpURLConnection) new URL(rootAPI.getLinks()
-                    .get("books").getTarget() + "?title=" + name).openConnection();
+            urlConnection = (HttpURLConnection) new URL(rootAPI.getLinks().get("books").getTarget() + "?title=" + name).openConnection();
             Log.d(TAG, String.valueOf(urlConnection));
             urlConnection.setRequestMethod("GET");
             urlConnection.setDoInput(true);
